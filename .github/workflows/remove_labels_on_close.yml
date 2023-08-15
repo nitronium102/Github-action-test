@@ -9,6 +9,11 @@ on:
 jobs:
   remove_labels:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions-ecosystem/action-remove-labels@v1.3.0
