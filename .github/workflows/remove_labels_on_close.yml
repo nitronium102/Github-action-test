@@ -1,4 +1,4 @@
-name: Remove Labels from PR to Develop
+name: Remove Labels
 
 on:
   pull_request:
@@ -7,41 +7,23 @@ on:
       - merged
 
 jobs:
-  remove-labels:
+  remove_labels:
     runs-on: ubuntu-latest
 
     permissions:
-      pull-requests: read
-      issues: write
+      contents: read
+      pull-requests: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Get PR labels
-        id: get_labels
-        run: |
-          GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
-          PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
-
-          LABELS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/labels" | jq -r '.[].name')
-
-          echo "Labels: $LABELS"
-
-      - name: Remove labels
-        run: |
-          GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
-          LABELS_TO_REMOVE=("❓답변필요" "👀리뷰필요" "💪수정요청" "💻수정반영중" "🖌리뷰중" "😊머지가능")
-          PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
-
-          for LABEL in ${{ steps.get_labels.outputs.labels }}; do
-            for LABEL_TO_REMOVE in "${LABELS_TO_REMOVE[@]}"; do
-              if [[ "$LABEL" == "$LABEL_TO_REMOVE" ]]; then
-                ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
-                curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" \
-                  "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/labels/$ENCODED_LABEL"
-                echo "Removed label: $LABEL"
-              fi
-            done
-          done
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-remove-labels@v1.3.0
+        with:
+          github_token: ${{ secrets.PERSONAL_TOKEN }}
+          fail_on_error: false
+          labels: |
+            😊머지가능
+            ❓답변필요
+            👀리뷰필요
+            💪수정요청
+            💻수정반영중
+            🖌리뷰중
