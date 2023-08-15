@@ -27,7 +27,7 @@ jobs:
           LABELS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" | jq -r '.[].name')
 
-          echo "::set-output name=labels::$LABELS"
+          echo "Labels: $LABELS"
 
       - name: Remove labels
         run: |
@@ -41,6 +41,7 @@ jobs:
                 ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
                 curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" \
                   "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
+                echo "Removed label: $LABEL"
               fi
             done
           done
