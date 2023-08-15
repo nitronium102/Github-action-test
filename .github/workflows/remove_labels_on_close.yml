@@ -36,29 +36,39 @@ on:
       - closed
       - merged
 
-
 jobs:
   remove-labels:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
-      pull-requests: write
+      pull-requests: read
+      issues: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # LABELS_TO_KEEP을 제외한 다른 라벨들을 제거
+      - name: Get PR labels
+        id: get_labels
+        run: |
+          GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
+          PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
+
+          LABELS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" | jq -r '.[].name')
+
+          echo "::set-output name=labels::$LABELS"
+
       - name: Remove labels
         run: |
           GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
           LABELS_TO_KEEP=("bugs" "documentation" "🐇Simple" "🚨긴급" "🛠refactor")
-
           PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
-          for LABEL in "${LABELS_TO_KEEP[@]}"; do
-            ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
-            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
+          for LABEL in ${{ steps.get_labels.outputs.labels }}; do
+            if [[ ! " ${LABELS_TO_KEEP[@]} " =~ " ${LABEL} " ]]; then
+              ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
+              curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
+            fi
           done
