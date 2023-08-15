@@ -24,8 +24,8 @@ jobs:
           GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
           PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
-          LABELS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" | jq -r '.[].name')
+          LABELS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" | jq -r '.[].name')
 
           echo "::set-output name=labels::$LABELS"
 
@@ -36,9 +36,11 @@ jobs:
           PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
           for LABEL in ${{ steps.get_labels.outputs.labels }}; do
-            if [[ " ${LABELS_TO_REMOVE[*]} " =~ " ${LABEL} " ]]; then
-              ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
-              curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
-            fi
+            for LABEL_TO_REMOVE in "${LABELS_TO_REMOVE[@]}"; do
+              if [[ "$LABEL" == "$LABEL_TO_REMOVE" ]]; then
+                ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
+                curl -X DELETE -H "Authorization: Bearer $GITHUB_TOKEN" \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
+              fi
+            done
           done
