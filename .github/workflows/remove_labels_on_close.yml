@@ -4,6 +4,7 @@ on:
   pull_request:
     types:
       - closed
+      - merged
 
 jobs:
   remove_labels:
@@ -12,6 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-ecosystem/action-remove-labels@v1.3.0
         with:
+          fail_on_error: false
           labels: |
             ❓답변필요
             👀리뷰필요
