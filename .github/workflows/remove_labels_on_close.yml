@@ -1,4 +1,4 @@
-name: Remove Labels from PR to Develop
+name: Remove Labels
 
 on:
   pull_request:
@@ -6,26 +6,16 @@ on:
       - closed
 
 jobs:
-  remove-labels:
+  remove_labels:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-
-      # LABELS_TO_KEEP을 제외한 다른 라벨들을 제거
-      - name: Remove labels
-        run: |
-          GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
-          LABELS_TO_KEEP=("bugs" "documentation" "🐇Simple" "🚨긴급" "🛠refactor")
-
-          PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
-
-          for LABEL in "${LABELS_TO_KEEP[@]}"; do
-            ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
-            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
-          done
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-remove-labels@v1.3.6
+        with:
+          labels: |
+            ❓답변필요
+            👀리뷰필요
+            💪수정요청
+            💻수정반영중
+            🖌리뷰중
+            😊머지가능
