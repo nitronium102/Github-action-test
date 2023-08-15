@@ -15,4 +15,5 @@ jobs:
       - name: add label
         uses: actions-ecosystem/action-add-labels@v1.1.0
         with:
+          github_token: ${{ secrets.PERSONAL_TOKEN }}
           labels: 👀리뷰필요
