@@ -15,7 +15,7 @@ jobs:
 
       - name: Add label
         run: |
-          GITHUB_TOKEN= ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_TOKEN= ${{secrets.PERSONAL_TOKEN }}
           NEW_LABEL="👀리뷰필요"
           ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$NEW_LABEL'))")
           PR_NUMBER=$(jq -r ".number" "$GITHUB_EVENT_PATH")
