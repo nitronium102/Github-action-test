@@ -33,20 +33,13 @@ jobs:
         run: |
           GITHUB_TOKEN=${{ secrets.PERSONAL_TOKEN }}
           LABELS_TO_REMOVE=(
-            "❓답변필요",
-            "👀리뷰필요",
-            "💪수정요청",
-            "💻수정반영중",
-            "🖌리뷰중",
-            "😊머지가능")
+            "❓답변필요","👀리뷰필요","💪수정요청","💻수정반영중","🖌리뷰중","😊머지가능")
           PR_NUMBER=$(jq -r ".pull_request.number" "$GITHUB_EVENT_PATH")
 
           for LABEL in ${{ steps.get_labels.outputs.labels }}; do
-            if [[ " ${LABELS_TO_REMOVE[@]} " =~ " ${LABEL} " ]]; then
-              continue
+            if [[ " ${LABELS_TO_REMOVE[@]} " == " ${LABEL} " ]]; then
+              ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
+              curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
             fi
-
-            ENCODED_LABEL=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$LABEL'))")
-            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/$ENCODED_LABEL"
           done
